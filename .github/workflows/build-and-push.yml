@@ -1,0 +1,26 @@
+name: Build & Push to ACR
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Login to ACR
+      uses: azure/docker-login@v1
+      with:
+        login-server: crkrareports.azurecr.io
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+
+    - name: Build and push image
+      run: |
+        docker build -t crkrareports.azurecr.io/xlsx-cleanser:1.0 .
+        docker push crkrareports.azurecr.io/xlsx-cleanser:1.0
