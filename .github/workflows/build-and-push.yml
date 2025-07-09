@@ -22,5 +22,5 @@ jobs:
 
     - name: Build and push image
       run: |
-        docker build -t crkrareports.azurecr.io/xlsx-cleanser:1.0 .
-        docker push crkrareports.azurecr.io/xlsx-cleanser:1.0
+        docker build -t crkrareports.azurecr.io/xlsx-cleanser:1.1 .
+        docker push crkrareports.azurecr.io/xlsx-cleanser:1.1
