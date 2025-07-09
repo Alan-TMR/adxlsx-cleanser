@@ -1,4 +1,13 @@
-numpy
 pandas
 openpyxl
+azure-identity
+azure-core
 azure-storage-blob
+azure-storage-queue
+azure-storage-file-datalake
+msal
+numpy
+six
+pytz
+python-dateutil
+et_xmlfile
