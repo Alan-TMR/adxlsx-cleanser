@@ -1,5 +1,6 @@
 # src/tasks/validate.py
 
+import os
 import pandas as pd
 import io
 from common import azure

@@ -25,7 +25,7 @@ def main():
 
     except Exception as e:
         print(f"❌ Workflow failed for Run ID: {run_id}. Error: {e}", file=sys.stderr)
-        print("Intermediate files are being left in the 'in-progress' container for debugging.", file=sys.stderr)
+        print("Intermediate files are left in the 'in-progress' container for debugging.", file=sys.stderr)
         sys.exit(1) # Exit with a non-zero status code to indicate failure
 
     # Final Step: Clean up intermediate files only on a successful run
