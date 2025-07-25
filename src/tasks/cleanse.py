@@ -11,15 +11,16 @@ from common import azure
 QUEUE_NAME = os.getenv("QUEUE_NAME", "eventqueue")
 INTERMEDIATE_CONTAINER = "in-progress"
 
-def run(run_id: str) -> tuple[str, str]:
+def run(run_id: str) -> tuple[list[str], str]:
     """
-    Pulls a message, converts the Excel file to CSV, and saves it to a temporary location.
+    Pulls a message, reads all sheets from the Excel file, converts each to a CSV,
+    and uploads them to the intermediate container.
 
     Args:
         run_id: The unique identifier for this workflow run.
 
     Returns:
-        A tuple containing the intermediate blob name and the original relative file path.
+        A tuple containing a list of the intermediate blob names and the original path.
     """
     print(f"[{run_id}] Running 'cleanse' task...")
 
@@ -45,12 +46,22 @@ def run(run_id: str) -> tuple[str, str]:
     
     q_client.delete_message(msg)
 
-    df = pd.read_excel(io.BytesIO(data), engine="openpyxl")
+    # Read all sheets into a dictionary of DataFrames
+    excel_data = pd.read_excel(io.BytesIO(data), engine="openpyxl", sheet_name=None)
     
-    output_blob_name = f"{run_id}/01-cleansed.csv"
-    out_blob = azure.get_blob_client(INTERMEDIATE_CONTAINER, output_blob_name)
-    out_blob.upload_blob(df.to_csv(index=False).encode('utf-8'), overwrite=True)
+    created_blob_names = []
+    print(f"[{run_id}] Found {len(excel_data)} sheets to process.")
+
+    # Loop through each sheet and save it as a separate blob
+    for sheet_name, df in excel_data.items():
+        # Sanitize sheet name for use in blob path
+        safe_sheet_name = "".join(c for c in sheet_name if c.isalnum() or c in (' ', '_', '-')).rstrip()
+        output_blob_name = f"{run_id}/01-cleansed-{safe_sheet_name}.csv"
+        
+        out_blob = azure.get_blob_client(INTERMEDIATE_CONTAINER, output_blob_name)
+        out_blob.upload_blob(df.to_csv(index=False).encode('utf-8'), overwrite=True)
+        
+        created_blob_names.append(output_blob_name)
+        print(f"[{run_id}] Cleansed file for sheet '{sheet_name}' saved to: {INTERMEDIATE_CONTAINER}/{output_blob_name}")
     
-    print(f"[{run_id}] Cleansed file saved to: {INTERMEDIATE_CONTAINER}/{output_blob_name}")
-    
-    return output_blob_name, original_relative_path
+    return created_blob_names, original_relative_path
