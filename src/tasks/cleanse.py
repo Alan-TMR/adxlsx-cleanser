@@ -46,16 +46,14 @@ def run(run_id: str) -> tuple[list[str], str]:
     
     q_client.delete_message(msg)
 
-    # Read all sheets into a dictionary of DataFrames
     excel_data = pd.read_excel(io.BytesIO(data), engine="openpyxl", sheet_name=None)
     
     created_blob_names = []
     print(f"[{run_id}] Found {len(excel_data)} sheets to process.")
 
-    # Loop through each sheet and save it as a separate blob
     for sheet_name, df in excel_data.items():
-        # Sanitize sheet name for use in blob path
-        safe_sheet_name = "".join(c for c in sheet_name if c.isalnum() or c in (' ', '_', '-')).rstrip()
+        # First, replace any periods with underscores, then sanitize.
+        safe_sheet_name = "".join(c for c in sheet_name.replace('.', '_') if c.isalnum() or c in (' ', '_', '-')).rstrip()
         output_blob_name = f"{run_id}/01-cleansed-{safe_sheet_name}.csv"
         
         out_blob = azure.get_blob_client(INTERMEDIATE_CONTAINER, output_blob_name)
